@@ -1,0 +1,75 @@
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../providers/product_provider.dart';
+import '../widgets/stats_card.dart';
+
+class DashboardScreen extends ConsumerWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final products = ref.watch(productListProvider);
+
+    final totalItems = products.length;
+    final expiredItems = products.where((p) => p.daysRemaining < 0).length;
+    // Expiring within 7 days
+    final expiringSoon = products.where((p) => p.daysRemaining >= 0 && p.daysRemaining <= 7).length;
+    final freshItems = products.where((p) => p.daysRemaining > 7).length;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Overview',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+                children: [
+                   StatsCard(
+                    title: 'Total Items',
+                    value: totalItems.toString(),
+                    icon: PhosphorIconsRegular.package,
+                    color: Colors.blue,
+                  ),
+                  StatsCard(
+                    title: 'Expiring Soon',
+                    value: expiringSoon.toString(),
+                    icon: PhosphorIconsRegular.timer,
+                    color: Colors.orange,
+                  ),
+                   StatsCard(
+                    title: 'Expired',
+                    value: expiredItems.toString(),
+                    icon: PhosphorIconsRegular.warningCircle,
+                    color: Colors.red,
+                  ),
+                   StatsCard(
+                    title: 'Fresh',
+                    value: freshItems.toString(),
+                    icon: PhosphorIconsRegular.checkCircle,
+                    color: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            // Could add a list of "Expiring this week" below
+          ],
+        ),
+      ),
+    );
+  }
+}

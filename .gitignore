@@ -1,0 +1,69 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+*.cc
+*.h
+*.txt
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+ios/Runner/Assets.xcassets
+android/app/src/main/res/mipmap-hdpi
+android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+ios/Runner.xcodeproj/project.xcworkspace
+linux/CMakeLists.txt
+linux/flutter/CMakeLists.txt
+macos/Runner/Assets.xcassets
+macos/Runner/Configs
+macos/Runner.xcodeproj/project.xcworkspace
+macos/Runner.xcworkspace/contents.xcworkspacedata
+macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+web/favicon.png
+web/index.html
+web/manifest.json
+android/.gradle
+ios/Flutter/Debug.xcconfig
+ios/RunnerTests/RunnerTests.swift
+web/icons
