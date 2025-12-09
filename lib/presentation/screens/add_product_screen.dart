@@ -19,13 +19,16 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
   
   final _nameController = TextEditingController();
-  final _quantityController = TextEditingController(); // e.g., "1"
+  final _quantityController = TextEditingController(text: '1'); // e.g., "1"
   String _unit = 'items'; // items, kg, L, etc.
   ProductCategory _category = ProductCategory.other;
   
   DateTime _mfgDate = DateTime.now();
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 7));
   
+  final _shelfLifeController = TextEditingController();
+  String _shelfLifeUnit = 'Days';
+
   // Helper for date picker
   Future<void> _pickDate(bool isMfg) async {
     final initialDate = isMfg ? _mfgDate : _expiryDate;
@@ -39,11 +42,34 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       setState(() {
         if (isMfg) {
           _mfgDate = picked;
+          _calculateExpiryFromShelfLife(_shelfLifeController.text);
         } else {
           _expiryDate = picked;
+          // Optional: Reverse calculate shelf life? Maybe simpler to just let user override.
+          _shelfLifeController.clear(); 
         }
       });
     }
+  }
+
+  void _calculateExpiryFromShelfLife(String value) {
+    if (value.isEmpty) return;
+    final duration = int.tryParse(value);
+    if (duration == null) return;
+
+    DateTime newExpiry = _mfgDate;
+    if (_shelfLifeUnit == 'Days') {
+      newExpiry = _mfgDate.add(Duration(days: duration));
+    } else if (_shelfLifeUnit == 'Months') {
+      // Approximate or precise? simple month addition
+      newExpiry = DateTime(_mfgDate.year, _mfgDate.month + duration, _mfgDate.day);
+    } else if (_shelfLifeUnit == 'Years') {
+      newExpiry = DateTime(_mfgDate.year + duration, _mfgDate.month, _mfgDate.day);
+    }
+    
+    setState(() {
+      _expiryDate = newExpiry;
+    });
   }
 
   void _submit() {
@@ -137,7 +163,42 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               
               _buildDateRow('Manufacturing Date', _mfgDate, () => _pickDate(true)),
               const SizedBox(height: 16),
-              _buildDateRow('Expiry Date', _expiryDate, () => _pickDate(false), color: Colors.blue..withValues(alpha: 0.1)),
+              
+              // Shelf Life Section
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: _shelfLifeController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Shelf Life',
+                        border: OutlineInputBorder(),
+                        //helperText: 'Auto-calculates expiry',
+                      ),
+                      onChanged: _calculateExpiryFromShelfLife,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<String>(
+                      value: _shelfLifeUnit,
+                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                      items: ['Days', 'Months', 'Years'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                      onChanged: (v) {
+                        setState(() => _shelfLifeUnit = v!);
+                        _calculateExpiryFromShelfLife(_shelfLifeController.text);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              _buildDateRow('Expiry Date', _expiryDate, () => _pickDate(false), color: Colors.blue.withValues(alpha: 0.1)),
               
               const SizedBox(height: 32),
               
