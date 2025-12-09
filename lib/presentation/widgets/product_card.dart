@@ -33,17 +33,7 @@ class ProductCard extends StatelessWidget {
       statusText = 'Fresh';
     }
 
-    return Dismissible(
-      key: Key(product.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      onDismissed: (_) => onDelete?.call(),
-      child: Card(
+    return Card(
         margin: const EdgeInsets.only(bottom: 12),
         elevation: 0, // Using outlined or filled variant style often looks cleaner
         color: Theme.of(context).colorScheme.surfaceContainerLow, 
@@ -80,7 +70,6 @@ class ProductCard extends StatelessWidget {
             onPressed: onDelete,
           ),
         ),
-      ),
-    );
+      );
   }
 }
