@@ -108,7 +108,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   Expanded(
                     flex: 1,
                     child: DropdownButtonFormField<String>(
-                      value: _unit,
+                      initialValue: _unit,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
                       items: ['items', 'kg', 'g', 'L', 'ml'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                       onChanged: (v) => setState(() => _unit = v!),
@@ -119,7 +119,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               const SizedBox(height: 16),
               
               DropdownButtonFormField<ProductCategory>(
-                value: _category,
+                initialValue: _category,
                 decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -137,7 +137,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               
               _buildDateRow('Manufacturing Date', _mfgDate, () => _pickDate(true)),
               const SizedBox(height: 16),
-              _buildDateRow('Expiry Date', _expiryDate, () => _pickDate(false), color: Colors.blue.withOpacity(0.1)),
+              _buildDateRow('Expiry Date', _expiryDate, () => _pickDate(false), color: Colors.blue..withValues(alpha: 0.1)),
               
               const SizedBox(height: 32),
               
