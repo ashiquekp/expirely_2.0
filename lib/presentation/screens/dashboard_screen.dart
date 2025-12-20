@@ -3,13 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../providers/product_provider.dart';
+import '../../core/services/notification_service.dart';
 import '../widgets/stats_card.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Request permissions after the first frame to ensure smooth UI capability
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+       await ref.read(notificationServiceProvider).requestPermissions();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final products = ref.watch(productListProvider);
 
     final totalItems = products.length;

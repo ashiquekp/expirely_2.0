@@ -12,13 +12,38 @@ class NotificationService {
   Future<void> init() async {
     tz.initializeTimeZones();
     const fln.AndroidInitializationSettings initializationSettingsAndroid =
-        fln.AndroidInitializationSettings('@mipmap/ic_launcher');
+        fln.AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const fln.InitializationSettings initializationSettings = fln.InitializationSettings(
       android: initializationSettingsAndroid,
     );
 
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) {
+        // Handle notification tap
+      },
+    );
+  }
+
+  Future<void> requestPermissions() async {
+    final androidImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<fln.AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidImplementation != null) {
+      await androidImplementation.requestNotificationsPermission();
+    }
+    
+    final iosImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<fln.IOSFlutterLocalNotificationsPlugin>();
+        
+    if (iosImplementation != null) {
+      await iosImplementation.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
   Future<void> scheduleNotification({

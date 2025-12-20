@@ -1,5 +1,4 @@
 
-import 'package:expirely/core/services/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -9,18 +8,13 @@ import 'data/models/product_category.dart';
 import 'data/repositories/product_repository.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+import 'core/services/notification_service.dart';
+
 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  tz.initializeTimeZones();
-  tz.setLocalLocation(tz.getLocation('Asia/Kolkata')); // or your timezone
-
-  await requestExactAlarmPermission(); 
-  
   // Initialize Hive
   await Hive.initFlutter();
   
@@ -31,6 +25,15 @@ Future<void> main() async {
   // Open Boxes (Initialize Repository)
   final productRepo = ProductRepository();
   await productRepo.init();
+
+  // Initialize Notifications
+  final notificationService = NotificationService();
+  try {
+    await notificationService.init();
+  } catch (e) {
+    debugPrint('Notification init failed: $e');
+  }
+
   
   await initializeDateFormatting('en_US', null);
 
@@ -38,6 +41,7 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         productRepositoryProvider.overrideWithValue(productRepo),
+        notificationServiceProvider.overrideWithValue(notificationService),
       ],
       child: const ExpirelyApp(),
     ),
