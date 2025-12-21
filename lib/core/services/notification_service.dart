@@ -1,20 +1,20 @@
 
-import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../../data/models/product_model.dart';
 
 class NotificationService {
-  final fln.FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      fln.FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    const fln.AndroidInitializationSettings initializationSettingsAndroid =
-        fln.AndroidInitializationSettings('@mipmap/launcher_icon');
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
-    const fln.InitializationSettings initializationSettings = fln.InitializationSettings(
+    const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
 
@@ -28,14 +28,14 @@ class NotificationService {
 
   Future<void> requestPermissions() async {
     final androidImplementation = flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<fln.AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     
     if (androidImplementation != null) {
       await androidImplementation.requestNotificationsPermission();
     }
     
     final iosImplementation = flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<fln.IOSFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
         
     if (iosImplementation != null) {
       await iosImplementation.requestPermissions(
@@ -54,24 +54,44 @@ class NotificationService {
   }) async {
     if (scheduledDate.isBefore(DateTime.now())) return;
 
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      const fln.NotificationDetails(
-        android: fln.AndroidNotificationDetails(
-          'expiry_channel',
-          'Expiry Notifications',
-          channelDescription: 'Notifications for expiring products',
-          importance: fln.Importance.max,
-          priority: fln.Priority.high,
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'expiry_channel',
+            'Expiry Notifications',
+            channelDescription: 'Notifications for expiring products',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
         ),
-      ),
-      androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
-      // uiLocalNotificationDateInterpretation:
-      //     fln.UILocalNotificationDateInterpretation.absoluteTime,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      // Fallback to inexact if exact permission is denied
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'expiry_channel',
+            'Expiry Notifications',
+            channelDescription: 'Notifications for expiring products',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
   }
 
   Future<void> cancelNotification(int id) async {

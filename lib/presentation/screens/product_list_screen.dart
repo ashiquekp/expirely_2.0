@@ -125,8 +125,29 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       return ProductCard(
                         product: product,
                         onDelete: () {
-                           ref.read(productListProvider.notifier).deleteProduct(product.id);
-                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${product.name} deleted')));
+                          debugPrint('Delete clicked for ${product.name}');
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Delete Product?'),
+                              content: Text('Are you sure you want to delete "${product.name}"?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    ref.read(productListProvider.notifier).deleteProduct(product.id);
+                                    Navigator.pop(ctx);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('${product.name} deleted')));
+                                  },
+                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
                         },
                       );
                     },

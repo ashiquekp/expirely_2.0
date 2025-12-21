@@ -66,8 +66,9 @@ class ProductCard extends StatelessWidget {
             ],
           ),
           trailing: IconButton(
-            icon: const Icon(Icons.delete_outline, size: 20),
+            icon: const Icon(Icons.delete_forever, size: 24, color: Colors.red),
             onPressed: onDelete,
+            tooltip: 'Delete Product',
           ),
         ),
       );

@@ -17,6 +17,7 @@ class AddProductScreen extends ConsumerStatefulWidget {
 
 class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
   
   final _nameController = TextEditingController();
   final _quantityController = TextEditingController(text: '1'); // e.g., "1"
@@ -72,8 +73,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isSaving = true);
+      
       final newProduct = ProductModel(
         id: const Uuid().v4(),
         name: _nameController.text.trim(),
@@ -84,14 +87,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         expiryDate: _expiryDate,
       );
       
-      ref.read(productListProvider.notifier).addProduct(newProduct);
-      
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product Added!')));
-      
-      // Navigate back to products or dashboard
-      context.go('/products');
-      
-      // Reset form (though navigating away disposes it usually)
+      try {
+        await ref.read(productListProvider.notifier).addProduct(newProduct);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product Added!')));
+          context.go('/products');
+        }
+      } catch (e) {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+           setState(() => _isSaving = false);
+        }
+      }
     }
   }
 
@@ -202,7 +209,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               
               const SizedBox(height: 32),
               
-              FilledButton.icon(
+              _isSaving 
+                  ? const Center(child: CircularProgressIndicator())
+                  : FilledButton.icon(
                 onPressed: _submit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save Product'),
