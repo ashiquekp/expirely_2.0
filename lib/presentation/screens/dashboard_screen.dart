@@ -36,6 +36,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on),
+            tooltip: 'Test Immediate Notification',
+            onPressed: () async {
+              await ref.read(notificationServiceProvider).showImmediateNotification();
+               ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Sent immediate notification'))
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications_active_outlined),
+            tooltip: 'Test Notification (10s)',
+            onPressed: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Scheduling test notification in 10s... Close the app now!'))
+              );
+              await ref.read(notificationServiceProvider).scheduleTestNotification();
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
