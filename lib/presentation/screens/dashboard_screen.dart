@@ -42,7 +42,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             tooltip: 'Test Immediate Notification',
             onPressed: () async {
               await ref.read(notificationServiceProvider).showImmediateNotification();
-               ScaffoldMessenger.of(context).showSnackBar(
+                // ignore: use_build_context_synchronously
+                ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Sent immediate notification'))
               );
             },

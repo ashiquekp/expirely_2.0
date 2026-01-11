@@ -31,7 +31,7 @@ Future<void> main() async {
   try {
     await notificationService.init();
   } catch (e) {
-    debugPrint('Notification init failed: $e');
+    // debugPrint('Notification init failed: $e');
   }
 
   

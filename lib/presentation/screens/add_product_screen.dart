@@ -192,7 +192,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   Expanded(
                     flex: 1,
                     child: DropdownButtonFormField<String>(
-                      value: _shelfLifeUnit,
+                      initialValue: _shelfLifeUnit,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
                       items: ['Days', 'Months', 'Years'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                       onChanged: (v) {
