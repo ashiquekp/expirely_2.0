@@ -57,6 +57,67 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               await ref.read(notificationServiceProvider).scheduleTestNotification();
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            tooltip: 'Debug Info',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  final ns = ref.read(notificationServiceProvider);
+                  return AlertDialog(
+                    title: const Text('Notification Debug'),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Timezone: ${ns.getCurrentTimezone()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 10),
+                          const Text('Pending Requests:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Divider(),
+                          FutureBuilder( 
+                            future: ns.getPendingNotifications(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const CircularProgressIndicator();
+                              }
+                              if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              }
+                              final data = snapshot.data ?? [];
+                              if (data.isEmpty) return const Text('No pending notifications');
+                              
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: data.map((n) {
+                                  // n is PendingNotificationRequest
+                                  String scheduledTime = "Unknown/Direct";
+                                  if (n.payload != null) {
+                                      final parsed = DateTime.tryParse(n.payload!);
+                                      if (parsed != null) {
+                                          scheduledTime = parsed.toString().split('.')[0];
+                                      }
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Text('[ID: ${n.id}] ${n.title}\nScheduled: $scheduledTime'),
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
       body: Padding(

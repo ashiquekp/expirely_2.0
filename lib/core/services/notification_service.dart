@@ -1,4 +1,3 @@
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,11 +14,14 @@ class NotificationService {
     try {
       tz.initializeTimeZones();
       // Use dynamic because return type might be String or TimezoneInfo depending on version/platform
-      final dynamic localTimezoneResult = await FlutterTimezone.getLocalTimezone();
-      
+      final dynamic localTimezoneResult =
+          await FlutterTimezone.getLocalTimezone();
+
       String locationName;
       if (localTimezoneResult is String) {
         locationName = localTimezoneResult;
+        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        print(localTimezoneResult);
       } else {
         // Fallback for TimezoneInfo object: Try to extract ID from toString()
         // Format seen: "TimezoneInfo(Asia/Calcutta, ...)"
@@ -31,23 +33,29 @@ class NotificationService {
           locationName = raw;
         }
       }
-      
+
       print("DEBUG: Extracted Timezone ID: '$locationName'");
 
       // Try setting location
       try {
-        tz.setLocalLocation(tz.getLocation(locationName));
+        //tz.setLocalLocation(tz.getLocation('$locationName'));
+        tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
         print("DEBUG: Local timezone set to $locationName");
       } catch (e) {
         print("DEBUG: TZ set error '$e'. Fallback logic...");
-        if (locationName.contains('Asia/Calcutta') || locationName.contains('India')) {
-           try {
-             tz.setLocalLocation(tz.getLocation('Asia/Kolkata')); 
-             print("DEBUG: Set to Asia/Kolkata alias");
-           } catch (_) {
-             tz.setLocalLocation(tz.UTC);
-           }
-        } else {
+        print(
+          '-------------------------------------------------------------------',
+        );
+        print(tz.getLocation(locationName));
+        print('::::::::::::::::::');
+        print(locationName);
+        print(locationName);
+        // Fallback: If "Asia/Calcutta" or any failure, try "Asia/Kolkata" first
+        try {
+           tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+           print("DEBUG: Force set to Asia/Kolkata");
+        } catch (_) {
+           print("DEBUG: Asia/Kolkata unavailable. Fallback to UTC.");
            tz.setLocalLocation(tz.UTC);
         }
       }
@@ -63,9 +71,8 @@ class NotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
@@ -78,15 +85,20 @@ class NotificationService {
 
   Future<void> requestPermissions() async {
     final androidImplementation = flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
     if (androidImplementation != null) {
       await androidImplementation.requestNotificationsPermission();
+      await androidImplementation.requestExactAlarmsPermission();
     }
-    
+
     final iosImplementation = flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-        
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+
     if (iosImplementation != null) {
       await iosImplementation.requestPermissions(
         alert: true,
@@ -107,38 +119,40 @@ class NotificationService {
 
     // If scheduled for the past or very near future (< 1 minute), show immediately/directly
     if (diff.inSeconds < 60) {
-       print("DEBUG: Scheduled time is effectively NOW (${diff.inSeconds}s diff). Using direct show().");
-       try {
-         await flutterLocalNotificationsPlugin.show(
-            id,
-            title,
-            body,
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'expiry_channel',
-                'Expiry Notifications',
-                channelDescription: 'Notifications for expiring products',
-                importance: Importance.max,
-                priority: Priority.high,
-              ),
+      print(
+        "DEBUG: Scheduled time is effectively NOW (${diff.inSeconds}s diff). Using direct show().",
+      );
+      try {
+        await flutterLocalNotificationsPlugin.show(
+          id,
+          title,
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'expiry_channel_v2', // Changed ID to force update
+              'Expiry Notifications',
+              channelDescription: 'Notifications for expiring products',
+              importance: Importance.max,
+              priority: Priority.high,
             ),
-         );
-         print("DEBUG: Direct show() command sent for ID $id");
-         return; 
-       } catch (e) {
-         print("DEBUG: Error in direct show(): $e");
-       }
+          ),
+        );
+        print("DEBUG: Direct show() command sent for ID $id");
+        return;
+      } catch (e) {
+        print("DEBUG: Error in direct show(): $e");
+      }
     }
 
     try {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
+      await (flutterLocalNotificationsPlugin as dynamic).zonedSchedule(
         id,
         title,
         body,
         tz.TZDateTime.from(scheduledDate, tz.local),
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'expiry_channel',
+            'expiry_channel_v2', // Changed ID
             'Expiry Notifications',
             channelDescription: 'Notifications for expiring products',
             importance: Importance.max,
@@ -146,18 +160,18 @@ class NotificationService {
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: scheduledDate.toIso8601String(),
       );
     } catch (e) {
       // Fallback to inexact if exact permission is denied
-      await flutterLocalNotificationsPlugin.zonedSchedule(
+      await (flutterLocalNotificationsPlugin as dynamic).zonedSchedule(
         id,
         title,
         body,
         tz.TZDateTime.from(scheduledDate, tz.local),
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'expiry_channel',
+            'expiry_channel_v2', // Changed ID
             'Expiry Notifications',
             channelDescription: 'Notifications for expiring products',
             importance: Importance.max,
@@ -165,7 +179,7 @@ class NotificationService {
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: scheduledDate.toIso8601String(),
       );
     }
   }
@@ -181,7 +195,7 @@ class NotificationService {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final expiryDateOnly = DateTime(expiry.year, expiry.month, expiry.day);
-    
+
     final diff = expiryDateOnly.difference(today).inDays;
     print("DEBUG: Expiry: $expiryDateOnly, Today: $today, Diff: $diff");
 
@@ -197,7 +211,8 @@ class NotificationService {
       await scheduleNotification(
         id: idBase + 7,
         title: 'Expiring in 7 days',
-        body: '${product.name} is expiring on ${expiry.toLocal().toString().split(' ')[0]}',
+        body:
+            '${product.name} is expiring on ${expiry.toLocal().toString().split(' ')[0]}',
         scheduledDate: date7Days,
       );
     } else {
@@ -219,18 +234,22 @@ class NotificationService {
     }
 
     // Expiring Tomorrow (1 Day Before)
-    DateTime scheduledTomorrow = set8AM(expiry.subtract(const Duration(days: 1)));
-    
+    DateTime scheduledTomorrow = set8AM(
+      expiry.subtract(const Duration(days: 1)),
+    );
+
     // Catch-up logic for Tomorrow alert
     if (diff == 1) {
-       print("DEBUG: Product expires Tomorrow. Scheduling immediate alert (5s delay).");
-       scheduledTomorrow = DateTime.now().add(const Duration(seconds: 5));
+      print(
+        "DEBUG: Product expires Tomorrow. Scheduling immediate alert (5s delay).",
+      );
+      scheduledTomorrow = DateTime.now().add(const Duration(seconds: 5));
     }
-    
+
     // Only schedule if future (or made future by catch-up)
     if (scheduledTomorrow.isAfter(now)) {
-       print("DEBUG: Scheduling Tomorrow alert for $scheduledTomorrow");
-       await scheduleNotification(
+      print("DEBUG: Scheduling Tomorrow alert for $scheduledTomorrow");
+      await scheduleNotification(
         id: idBase + 1,
         title: 'Expiring Tomorrow',
         body: 'Consume ${product.name} before it expires!',
@@ -240,24 +259,26 @@ class NotificationService {
 
     // Expired Today
     DateTime scheduledToday = set8AM(expiry);
-    
+
     // Catch-up logic for Today alert
     if (diff == 0) {
-       print("DEBUG: Product expires Today. Scheduling immediate alert (5s delay).");
-       scheduledToday = DateTime.now().add(const Duration(seconds: 5));
+      print(
+        "DEBUG: Product expires Today. Scheduling immediate alert (5s delay).",
+      );
+      scheduledToday = DateTime.now().add(const Duration(seconds: 5));
     }
 
     // Only schedule if future (or made future by catch-up)
     if (scheduledToday.isAfter(now)) {
-       print("DEBUG: Scheduling Today alert for $scheduledToday");
-       await scheduleNotification(
+      print("DEBUG: Scheduling Today alert for $scheduledToday");
+      await scheduleNotification(
         id: idBase,
         title: 'Expired Today',
         body: '${product.name} expires today!',
         scheduledDate: scheduledToday,
       );
     }
-    
+
     print("DEBUG: All schedules requested for ${product.name}");
   }
 
@@ -274,8 +295,10 @@ class NotificationService {
     print("DEBUG: Showing immediate notification...");
     try {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+          flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
 
       if (androidImplementation != null) {
         // Explicitly create channel to be sure
@@ -288,9 +311,10 @@ class NotificationService {
           ),
         );
         print("DEBUG: Channel created/verified.");
-        
+
         // Check permission status
-        final bool? granted = await androidImplementation.requestNotificationsPermission();
+        final bool? granted = await androidImplementation
+            .requestNotificationsPermission();
         print("DEBUG: Permission status: $granted");
       }
 
@@ -311,6 +335,28 @@ class NotificationService {
       print("DEBUG: Immediate notification command sent.");
     } catch (e) {
       print("DEBUG: Error showing immediate notification: $e");
+    }
+  }
+
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    final List<PendingNotificationRequest> pendingNotificationRequests =
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    print(
+      "DEBUG: Pending Notifications Count: ${pendingNotificationRequests.length}",
+    );
+    for (var n in pendingNotificationRequests) {
+      print(
+        "DEBUG: Pending: ID=${n.id}, Title=${n.title}, Payload=${n.payload}",
+      );
+    }
+    return pendingNotificationRequests;
+  }
+
+  String getCurrentTimezone() {
+    try {
+      return tz.local.name;
+    } catch (e) {
+      return "Error: $e";
     }
   }
 }
