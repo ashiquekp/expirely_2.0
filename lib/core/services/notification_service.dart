@@ -17,16 +17,14 @@ class NotificationService {
       final dynamic localTimezoneResult =
           await FlutterTimezone.getLocalTimezone();
 
+      // ignore: unused_local_variable
       String locationName;
       if (localTimezoneResult is String) {
         locationName = localTimezoneResult;
-        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        print(localTimezoneResult);
       } else {
         // Fallback for TimezoneInfo object: Try to extract ID from toString()
         // Format seen: "TimezoneInfo(Asia/Calcutta, ...)"
         String raw = localTimezoneResult.toString();
-        print("DEBUG: Raw Timezone Object: $raw");
         if (raw.startsWith('TimezoneInfo(')) {
           locationName = raw.split('(')[1].split(',')[0].trim();
         } else {
@@ -34,33 +32,27 @@ class NotificationService {
         }
       }
 
-      print("DEBUG: Extracted Timezone ID: '$locationName'");
+      //print("DEBUG: Extracted Timezone ID: '$locationName'");
 
       // Try setting location
       try {
         //tz.setLocalLocation(tz.getLocation('$locationName'));
         tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
-        print("DEBUG: Local timezone set to $locationName");
+        //print("DEBUG: Local timezone set to $locationName");
       } catch (e) {
-        print("DEBUG: TZ set error '$e'. Fallback logic...");
-        print(
-          '-------------------------------------------------------------------',
-        );
-        print(tz.getLocation(locationName));
-        print('::::::::::::::::::');
-        print(locationName);
-        print(locationName);
+       // print("DEBUG: TZ set error '$e'. Fallback logic...");
+
         // Fallback: If "Asia/Calcutta" or any failure, try "Asia/Kolkata" first
         try {
            tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
-           print("DEBUG: Force set to Asia/Kolkata");
+          // print("DEBUG: Force set to Asia/Kolkata");
         } catch (_) {
-           print("DEBUG: Asia/Kolkata unavailable. Fallback to UTC.");
+           //print("DEBUG: Asia/Kolkata unavailable. Fallback to UTC.");
            tz.setLocalLocation(tz.UTC);
         }
       }
     } catch (e) {
-      print("DEBUG: Critical Timezone Init Failure: $e");
+      //print("DEBUG: Critical Timezone Init Failure: $e");
       // Fallback
       try {
         tz.setLocalLocation(tz.UTC);
@@ -80,7 +72,7 @@ class NotificationService {
         // Handle notification tap
       },
     );
-    print("DEBUG: Notification Plugin Initialized.");
+    // print("DEBUG: Notification Plugin Initialized.");
   }
 
   Future<void> requestPermissions() async {
@@ -119,9 +111,9 @@ class NotificationService {
 
     // If scheduled for the past or very near future (< 1 minute), show immediately/directly
     if (diff.inSeconds < 60) {
-      print(
-        "DEBUG: Scheduled time is effectively NOW (${diff.inSeconds}s diff). Using direct show().",
-      );
+      // print(
+      //   "DEBUG: Scheduled time is effectively NOW (${diff.inSeconds}s diff). Using direct show().",
+      // );
       try {
         await flutterLocalNotificationsPlugin.show(
           id,
@@ -137,10 +129,10 @@ class NotificationService {
             ),
           ),
         );
-        print("DEBUG: Direct show() command sent for ID $id");
+        // print("DEBUG: Direct show() command sent for ID $id");
         return;
       } catch (e) {
-        print("DEBUG: Error in direct show(): $e");
+        // print("DEBUG: Error in direct show(): $e");
       }
     }
 
@@ -189,7 +181,7 @@ class NotificationService {
   }
 
   Future<void> scheduleExpiryNotifications(ProductModel product) async {
-    print("DEBUG: scheduleExpiryNotifications called for ${product.name}");
+    // print("DEBUG: scheduleExpiryNotifications called for ${product.name}");
     final expiry = product.expiryDate;
     final idBase = product.id.hashCode;
     final now = DateTime.now();
@@ -197,17 +189,53 @@ class NotificationService {
     final expiryDateOnly = DateTime(expiry.year, expiry.month, expiry.day);
 
     final diff = expiryDateOnly.difference(today).inDays;
-    print("DEBUG: Expiry: $expiryDateOnly, Today: $today, Diff: $diff");
+    // print("DEBUG: Expiry: $expiryDateOnly, Today: $today, Diff: $diff");
 
     // Helper to set time to 8:00 AM
     DateTime set8AM(DateTime date) {
       return DateTime(date.year, date.month, date.day, 8, 0, 0);
     }
 
+    // 3 Months Before
+    DateTime date3Months = set8AM(expiry.subtract(const Duration(days: 90)));
+    if (date3Months.isAfter(now)) {
+      // print("DEBUG: Scheduling 3-month alert...");
+      await scheduleNotification(
+        id: idBase + 90,
+        title: 'Expiring in 3 Months',
+        body: '${product.name} expires in 3 months.',
+        scheduledDate: date3Months,
+      );
+    }
+
+    // 1 Month Before
+    DateTime date1Month = set8AM(expiry.subtract(const Duration(days: 30)));
+    if (date1Month.isAfter(now)) {
+      // print("DEBUG: Scheduling 1-month alert...");
+      await scheduleNotification(
+        id: idBase + 30,
+        title: 'Expiring in 1 Month',
+        body: '${product.name} expires in 30 days.',
+        scheduledDate: date1Month,
+      );
+    }
+
+    // 15 Days Before
+    DateTime date15Days = set8AM(expiry.subtract(const Duration(days: 15)));
+    if (date15Days.isAfter(now)) {
+      // print("DEBUG: Scheduling 15-day alert...");
+      await scheduleNotification(
+        id: idBase + 15,
+        title: 'Expiring in 15 Days',
+        body: '${product.name} expires in 15 days.',
+        scheduledDate: date15Days,
+      );
+    }
+
     // 7 Days Before
     DateTime date7Days = set8AM(expiry.subtract(const Duration(days: 7)));
     if (date7Days.isAfter(now)) {
-      print("DEBUG: Scheduling 7-day alert...");
+      // print("DEBUG: Scheduling 7-day alert...");
       await scheduleNotification(
         id: idBase + 7,
         title: 'Expiring in 7 days',
@@ -216,13 +244,13 @@ class NotificationService {
         scheduledDate: date7Days,
       );
     } else {
-      print("DEBUG: Skipping 7-day alert (Time passed: $date7Days)");
+      // print("DEBUG: Skipping 7-day alert (Time passed: $date7Days)");
     }
 
     // 3 Days Before
     DateTime date3Days = set8AM(expiry.subtract(const Duration(days: 3)));
     if (date3Days.isAfter(now)) {
-      print("DEBUG: Scheduling 3-day alert...");
+      // print("DEBUG: Scheduling 3-day alert...");
       await scheduleNotification(
         id: idBase + 3,
         title: 'Expiring in 3 days',
@@ -230,7 +258,7 @@ class NotificationService {
         scheduledDate: date3Days,
       );
     } else {
-      print("DEBUG: Skipping 3-day alert (Time passed: $date3Days)");
+      // print("DEBUG: Skipping 3-day alert (Time passed: $date3Days)");
     }
 
     // Expiring Tomorrow (1 Day Before)
@@ -240,15 +268,15 @@ class NotificationService {
 
     // Catch-up logic for Tomorrow alert
     if (diff == 1) {
-      print(
-        "DEBUG: Product expires Tomorrow. Scheduling immediate alert (5s delay).",
-      );
+      // print(
+      //   "DEBUG: Product expires Tomorrow. Scheduling immediate alert (5s delay).",
+      // );
       scheduledTomorrow = DateTime.now().add(const Duration(seconds: 5));
     }
 
     // Only schedule if future (or made future by catch-up)
     if (scheduledTomorrow.isAfter(now)) {
-      print("DEBUG: Scheduling Tomorrow alert for $scheduledTomorrow");
+      // print("DEBUG: Scheduling Tomorrow alert for $scheduledTomorrow");
       await scheduleNotification(
         id: idBase + 1,
         title: 'Expiring Tomorrow',
@@ -262,15 +290,15 @@ class NotificationService {
 
     // Catch-up logic for Today alert
     if (diff == 0) {
-      print(
-        "DEBUG: Product expires Today. Scheduling immediate alert (5s delay).",
-      );
+      // print(
+      //   "DEBUG: Product expires Today. Scheduling immediate alert (5s delay).",
+      // );
       scheduledToday = DateTime.now().add(const Duration(seconds: 5));
     }
 
     // Only schedule if future (or made future by catch-up)
     if (scheduledToday.isAfter(now)) {
-      print("DEBUG: Scheduling Today alert for $scheduledToday");
+      // print("DEBUG: Scheduling Today alert for $scheduledToday");
       await scheduleNotification(
         id: idBase,
         title: 'Expired Today',
@@ -279,7 +307,7 @@ class NotificationService {
       );
     }
 
-    print("DEBUG: All schedules requested for ${product.name}");
+    // print("DEBUG: All schedules requested for ${product.name}");
   }
 
   Future<void> scheduleTestNotification() async {
@@ -292,7 +320,7 @@ class NotificationService {
   }
 
   Future<void> showImmediateNotification() async {
-    print("DEBUG: Showing immediate notification...");
+    // print("DEBUG: Showing immediate notification...");
     try {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
           flutterLocalNotificationsPlugin
@@ -310,12 +338,13 @@ class NotificationService {
             importance: Importance.max,
           ),
         );
-        print("DEBUG: Channel created/verified.");
+        // print("DEBUG: Channel created/verified.");
 
         // Check permission status
+        // ignore: unused_local_variable
         final bool? granted = await androidImplementation
             .requestNotificationsPermission();
-        print("DEBUG: Permission status: $granted");
+        // print("DEBUG: Permission status: $granted");
       }
 
       await flutterLocalNotificationsPlugin.show(
@@ -332,23 +361,23 @@ class NotificationService {
           ),
         ),
       );
-      print("DEBUG: Immediate notification command sent.");
+      // print("DEBUG: Immediate notification command sent.");
     } catch (e) {
-      print("DEBUG: Error showing immediate notification: $e");
+      // print("DEBUG: Error showing immediate notification: $e");
     }
   }
 
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     final List<PendingNotificationRequest> pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-    print(
-      "DEBUG: Pending Notifications Count: ${pendingNotificationRequests.length}",
-    );
-    for (var n in pendingNotificationRequests) {
-      print(
-        "DEBUG: Pending: ID=${n.id}, Title=${n.title}, Payload=${n.payload}",
-      );
-    }
+    // print(
+    //   "DEBUG: Pending Notifications Count: ${pendingNotificationRequests.length}",
+    // );
+    // for (var n in pendingNotificationRequests) {
+    //   // print(
+    //   //   "DEBUG: Pending: ID=${n.id}, Title=${n.title}, Payload=${n.payload}",
+    //   // );
+    // }
     return pendingNotificationRequests;
   }
 
