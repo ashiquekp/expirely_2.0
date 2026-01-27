@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../providers/product_provider.dart';
+import '../providers/shopping_list_provider.dart';
 import '../widgets/product_card.dart';
 import '../../data/models/product_model.dart'; // Needed for type
 
@@ -124,6 +125,37 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       final product = filtered[index];
                       return ProductCard(
                         product: product,
+                        onRestock: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Restock Product?'),
+                              content: Text('Do you want to add "${product.name}" to your shopping list?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  onPressed: () {
+                                    ref.read(shoppingListProvider.notifier).addItem(
+                                      product.name,
+                                      quantity: product.quantity,
+                                      unit: product.unit,
+                                      category: product.category,
+                                    );
+                                    ref.read(productListProvider.notifier).deleteProduct(product.id);
+                                    Navigator.pop(ctx);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('${product.name} added to shopping list')),
+                                    );
+                                  },
+                                  child: const Text('Add to List'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                         onDelete: () {
                           debugPrint('Delete clicked for ${product.name}');
                           showDialog(

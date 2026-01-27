@@ -6,14 +6,15 @@ import '../../data/models/product_model.dart';
 class ProductCard extends StatelessWidget {
   final ProductModel product;
   final VoidCallback? onDelete;
-  final VoidCallback?
-  onEdit; // Not implementing Edit fully yet, but good to have
+  final VoidCallback? onEdit; // Not implementing Edit fully yet, but good to have
+  final VoidCallback? onRestock;
 
   const ProductCard({
     super.key,
     required this.product,
     this.onDelete,
     this.onEdit,
+    this.onRestock,
   });
 
   @override
@@ -98,6 +99,13 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
+            if (days < 0)
+              IconButton(
+                icon: const Icon(PhosphorIconsRegular.shoppingCart),
+                tooltip: 'Add to Shopping List',
+                onPressed: onRestock,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             IconButton(
               icon: const Icon(
                 Icons.delete_forever,
