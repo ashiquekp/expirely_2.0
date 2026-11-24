@@ -17,6 +17,28 @@ class ShoppingItemModel {
     this.category = ProductCategory.other,
   });
 
+  factory ShoppingItemModel.fromJson(Map<String, dynamic> json) {
+    return ShoppingItemModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      isCompleted: json['isCompleted'] as bool,
+      quantity: (json['quantity'] as num).toDouble(),
+      unit: json['unit'] as String,
+      category: ProductCategory.values.byName(json['category'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'isCompleted': isCompleted,
+      'quantity': quantity,
+      'unit': unit,
+      'category': category.name,
+    };
+  }
+
   ShoppingItemModel copyWith({
     String? id,
     String? name,

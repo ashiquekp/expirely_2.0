@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import '../providers/product_provider.dart';
 import '../../core/services/notification_service.dart';
 import '../widgets/stats_card.dart';
@@ -19,7 +18,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     super.initState();
     // Request permissions after the first frame to ensure smooth UI capability
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-       await ref.read(notificationServiceProvider).requestPermissions();
+      await ref.read(notificationServiceProvider).requestPermissions();
     });
   }
 
@@ -30,7 +29,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final totalItems = products.length;
     final expiredItems = products.where((p) => p.daysRemaining < 0).length;
     // Expiring within 7 days
-    final expiringSoon = products.where((p) => p.daysRemaining >= 0 && p.daysRemaining <= 7).length;
+    final expiringSoon = products
+        .where((p) => p.daysRemaining >= 0 && p.daysRemaining <= 7)
+        .length;
     final freshItems = products.where((p) => p.daysRemaining > 7).length;
 
     return Scaffold(
@@ -41,10 +42,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             icon: const Icon(Icons.flash_on),
             tooltip: 'Test Immediate Notification',
             onPressed: () async {
-              await ref.read(notificationServiceProvider).showImmediateNotification();
-                // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sent immediate notification'))
+              await ref
+                  .read(notificationServiceProvider)
+                  .showImmediateNotification();
+              // ignore: use_build_context_synchronously
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Sent immediate notification')),
               );
             },
           ),
@@ -53,9 +56,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             tooltip: 'Test Notification (10s)',
             onPressed: () async {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Scheduling test notification in 10s... Close the app now!'))
+                const SnackBar(
+                  content: Text(
+                    'Scheduling test notification in 10s... Close the app now!',
+                  ),
+                ),
               );
-              await ref.read(notificationServiceProvider).scheduleTestNotification();
+              await ref
+                  .read(notificationServiceProvider)
+                  .scheduleTestNotification();
             },
           ),
           IconButton(
@@ -73,36 +82,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Timezone: ${ns.getCurrentTimezone()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'Timezone: ${ns.getCurrentTimezone()}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 10),
-                          const Text('Pending Requests:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Pending Requests:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           const Divider(),
-                          FutureBuilder( 
+                          FutureBuilder(
                             future: ns.getPendingNotifications(),
                             builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
                                 return const CircularProgressIndicator();
                               }
                               if (snapshot.hasError) {
                                 return Text('Error: ${snapshot.error}');
                               }
                               final data = snapshot.data ?? [];
-                              if (data.isEmpty) return const Text('No pending notifications');
-                              
+                              if (data.isEmpty)
+                                return const Text('No pending notifications');
+
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: data.map((n) {
                                   // n is PendingNotificationRequest
                                   String scheduledTime = "Unknown/Direct";
                                   if (n.payload != null) {
-                                      final parsed = DateTime.tryParse(n.payload!);
-                                      if (parsed != null) {
-                                          scheduledTime = parsed.toString().split('.')[0];
-                                      }
+                                    final parsed = DateTime.tryParse(
+                                      n.payload!,
+                                    );
+                                    if (parsed != null) {
+                                      scheduledTime = parsed.toString().split(
+                                        '.',
+                                      )[0];
+                                    }
                                   }
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
-                                    child: Text('[ID: ${n.id}] ${n.title}\nScheduled: $scheduledTime'),
+                                    child: Text(
+                                      '[ID: ${n.id}] ${n.title}\nScheduled: $scheduledTime',
+                                    ),
                                   );
                                 }).toList(),
                               );
@@ -112,7 +135,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
                     ],
                   );
                 },
@@ -128,7 +154,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           children: [
             Text(
               'Overview',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -138,7 +166,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.1,
                 children: [
-                   StatsCard(
+                  StatsCard(
                     title: 'Total Items',
                     value: totalItems.toString(),
                     icon: PhosphorIconsRegular.package,
@@ -150,13 +178,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     icon: PhosphorIconsRegular.timer,
                     color: Colors.orange,
                   ),
-                   StatsCard(
+                  StatsCard(
                     title: 'Expired',
                     value: expiredItems.toString(),
                     icon: PhosphorIconsRegular.warningCircle,
                     color: Colors.red,
                   ),
-                   StatsCard(
+                  StatsCard(
                     title: 'Fresh',
                     value: freshItems.toString(),
                     icon: PhosphorIconsRegular.checkCircle,

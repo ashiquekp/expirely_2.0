@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/product_category.dart';
 import '../../data/models/product_model.dart';
@@ -19,7 +18,9 @@ class ShoppingListScreen extends ConsumerStatefulWidget {
 
 class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   final TextEditingController _itemController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController(text: '1');
+  final TextEditingController _quantityController = TextEditingController(
+    text: '1',
+  );
   String _unit = 'items';
   ProductCategory _category = ProductCategory.other;
 
@@ -38,17 +39,21 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         builder: (context, setModalState) {
           return Padding(
             // ... existing modal code ...
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
-                  )
+                  ),
                 ],
               ),
               padding: const EdgeInsets.all(24),
@@ -58,7 +63,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 children: [
                   Text(
                     'Add Item',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -68,7 +75,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       hintText: 'What do you need to buy?',
                       labelText: 'Item Name',
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      fillColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -83,11 +92,15 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         flex: 2,
                         child: TextField(
                           controller: _quantityController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           decoration: InputDecoration(
                             labelText: 'Quantity',
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            fillColor: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
@@ -102,14 +115,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           value: _unit,
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            fillColor: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                            ),
                           ),
-                          items: ['items', 'kg', 'g', 'L', 'ml', 'pcs'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                          items: ['items', 'kg', 'g', 'L', 'ml', 'pcs']
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList(),
                           onChanged: (v) => setModalState(() => _unit = v!),
                         ),
                       ),
@@ -121,7 +143,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     decoration: InputDecoration(
                       labelText: 'Category',
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      fillColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -143,27 +167,39 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     label: const Text('Add to List'),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
 
-  void _addItem() {
+  Future<void> _addItem() async {
     if (_itemController.text.trim().isNotEmpty) {
-      ref.read(shoppingListProvider.notifier).addItem(
-        _itemController.text,
-        quantity: double.tryParse(_quantityController.text) ?? 1.0,
-        unit: _unit,
-        category: _category,
-      );
-      Navigator.pop(context);
+      try {
+        await ref
+            .read(shoppingListProvider.notifier)
+            .addItem(
+              _itemController.text,
+              quantity: double.tryParse(_quantityController.text) ?? 1.0,
+              unit: _unit,
+              category: _category,
+            );
+        if (mounted) Navigator.pop(context);
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save shopping list: $error')),
+          );
+        }
+      }
     }
   }
 
@@ -187,9 +223,17 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       );
 
       await ref.read(productListProvider.notifier).addProduct(newProduct);
-      
+
       // Remove from shopping list
-      ref.read(shoppingListProvider.notifier).deleteItem(item.id);
+      try {
+        await ref.read(shoppingListProvider.notifier).deleteItem(item.id);
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save shopping list: $error')),
+          );
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -214,10 +258,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             IconButton(
               icon: const Icon(PhosphorIconsRegular.trashSimple),
               tooltip: 'Clear Completed',
-              onPressed: () {
-                 ref.read(shoppingListProvider.notifier).deleteCompleted();
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(shoppingListProvider.notifier)
+                      .deleteCompleted();
+                } catch (error) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not save shopping list: $error'),
+                      ),
+                    );
+                  }
+                }
               },
-            )
+            ),
         ],
       ),
       body: Column(
@@ -240,7 +296,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -285,11 +343,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(PhosphorIconsRegular.shoppingBagOpen, size: 64, color: Theme.of(context).disabledColor),
+                        Icon(
+                          PhosphorIconsRegular.shoppingBagOpen,
+                          size: 64,
+                          color: Theme.of(context).disabledColor,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Your list is empty',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
                                 color: Theme.of(context).disabledColor,
                               ),
                         ),
@@ -297,7 +360,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: shoppingList.length,
                     itemBuilder: (context, index) {
                       final item = shoppingList[index];
@@ -310,25 +376,58 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           color: Colors.red,
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
-                        onDismissed: (_) {
-                          ref.read(shoppingListProvider.notifier).deleteItem(item.id);
+                        onDismissed: (_) async {
+                          try {
+                            await ref
+                                .read(shoppingListProvider.notifier)
+                                .deleteItem(item.id);
+                          } catch (error) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Could not save shopping list: $error',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
                         },
                         child: Card(
                           elevation: 0,
                           color: item.isCompleted
-                              ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)
+                              ? Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withOpacity(0.5)
                               : Theme.of(context).cardColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                             side: BorderSide(
-                              color: Theme.of(context).dividerColor.withOpacity(0.1),
+                              color: Theme.of(
+                                context,
+                              ).dividerColor.withOpacity(0.1),
                             ),
                           ),
                           margin: const EdgeInsets.only(bottom: 12),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              ref.read(shoppingListProvider.notifier).toggleComplete(item.id);
+                            onTap: () async {
+                              try {
+                                await ref
+                                    .read(shoppingListProvider.notifier)
+                                    .toggleComplete(item.id);
+                              } catch (error) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Could not save shopping list: $error',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(16),
@@ -339,56 +438,96 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: item.isCompleted
-                                            ? Theme.of(context).colorScheme.primary
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primary
                                             : Theme.of(context).disabledColor,
                                         width: 2,
                                       ),
                                       color: item.isCompleted
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
                                           : Colors.transparent,
                                     ),
                                     padding: const EdgeInsets.all(2),
                                     child: item.isCompleted
-                                        ? const Icon(Icons.check, size: 16, color: Colors.white)
+                                        ? const Icon(
+                                            Icons.check,
+                                            size: 16,
+                                            color: Colors.white,
+                                          )
                                         : const SizedBox(width: 16, height: 16),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           item.name,
-                                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                                decoration: item.isCompleted ? TextDecoration.lineThrough : null,
-                                                color: item.isCompleted ? Theme.of(context).disabledColor : null,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                decoration: item.isCompleted
+                                                    ? TextDecoration.lineThrough
+                                                    : null,
+                                                color: item.isCompleted
+                                                    ? Theme.of(
+                                                        context,
+                                                      ).disabledColor
+                                                    : null,
                                                 fontWeight: FontWeight.w500,
                                               ),
                                         ),
                                         if (!item.isCompleted)
                                           Padding(
-                                            padding: const EdgeInsets.only(top: 4.0),
+                                            padding: const EdgeInsets.only(
+                                              top: 4.0,
+                                            ),
                                             child: Row(
                                               children: [
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    color: Theme.of(context).colorScheme.primaryContainer,
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primaryContainer,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                   ),
                                                   child: Text(
                                                     '${item.quantity % 1 == 0 ? item.quantity.toInt() : item.quantity} ${item.unit}',
-                                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                                    ),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .onPrimaryContainer,
+                                                        ),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Text(
-                                                  item.category.name.toUpperCase(),
-                                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                                    color: Theme.of(context).disabledColor,
-                                                  ),
+                                                  item.category.name
+                                                      .toUpperCase(),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelSmall
+                                                      ?.copyWith(
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).disabledColor,
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -398,11 +537,14 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                   ),
                                   if (item.isCompleted)
                                     IconButton(
-                                      onPressed: () => _startMoveToInventory(item), 
+                                      onPressed: () =>
+                                          _startMoveToInventory(item),
                                       icon: const Icon(Icons.archive),
                                       // icon: const Icon(PhosphorIconsRegular.archiveBox),
                                       tooltip: 'Move to Inventory',
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                 ],
                               ),
@@ -457,7 +599,7 @@ class _MoveToInventoryDialogState extends State<MoveToInventoryDialog> {
     } else if (_shelfLifeUnit == 'Years') {
       newExpiry = DateTime(today.year + duration, today.month, today.day);
     }
-    
+
     setState(() {
       _expiryDate = newExpiry;
     });
@@ -474,7 +616,8 @@ class _MoveToInventoryDialogState extends State<MoveToInventoryDialog> {
     if (picked != null) {
       setState(() {
         _expiryDate = picked;
-        _shelfLifeController.clear(); // Clear manual shelf life if specific date picked
+        _shelfLifeController
+            .clear(); // Clear manual shelf life if specific date picked
       });
     }
   }
@@ -488,13 +631,19 @@ class _MoveToInventoryDialogState extends State<MoveToInventoryDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Calculated Expiry Date:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Calculated Expiry Date:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             InkWell(
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(12),
@@ -509,47 +658,61 @@ class _MoveToInventoryDialogState extends State<MoveToInventoryDialog> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text('Or Enter Shelf Life:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Or Enter Shelf Life:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-             Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      controller: _shelfLifeController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Duration',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _shelfLifeController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Duration',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
                       ),
-                      onChanged: _calculateExpiryFromShelfLife,
                     ),
+                    onChanged: _calculateExpiryFromShelfLife,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<String>(
-                      value: _shelfLifeUnit,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: _shelfLifeUnit,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
                       ),
-                      items: ['Days', 'Months', 'Years'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                      onChanged: (v) {
-                        setState(() => _shelfLifeUnit = v!);
-                        _calculateExpiryFromShelfLife(_shelfLifeController.text);
-                      },
                     ),
+                    items: ['Days', 'Months', 'Years']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (v) {
+                      setState(() => _shelfLifeUnit = v!);
+                      _calculateExpiryFromShelfLife(_shelfLifeController.text);
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _expiryDate),
           child: const Text('Move'),

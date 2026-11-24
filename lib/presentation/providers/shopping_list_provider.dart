@@ -1,22 +1,25 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/shopping_item_model.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data/models/product_category.dart';
+import '../../data/repositories/shopping_list_repository.dart';
 
 class ShoppingListNotifier extends Notifier<List<ShoppingItemModel>> {
+  late ShoppingListRepository _repo;
+
   @override
   List<ShoppingItemModel> build() {
-    // Initial dummy data for testing UI (can be removed later)
-    return [
-      ShoppingItemModel(id: const Uuid().v4(), name: 'Milk', quantity: 2, unit: 'L', category: ProductCategory.food),
-      ShoppingItemModel(id: const Uuid().v4(), name: 'Tylenol', isCompleted: true, category: ProductCategory.medicine),
-      ShoppingItemModel(id: const Uuid().v4(), name: 'Eggs', quantity: 12, unit: 'items', category: ProductCategory.food),
-    ];
+    _repo = ref.read(shoppingListRepositoryProvider);
+    return _repo.getAllItems();
   }
 
-  void addItem(String name, {double quantity = 1.0, String unit = 'items', ProductCategory category = ProductCategory.other}) {
+  Future<void> addItem(
+    String name, {
+    double quantity = 1.0,
+    String unit = 'items',
+    ProductCategory category = ProductCategory.other,
+  }) async {
     if (name.trim().isEmpty) return;
     final newItem = ShoppingItemModel(
       id: const Uuid().v4(),
@@ -25,26 +28,34 @@ class ShoppingListNotifier extends Notifier<List<ShoppingItemModel>> {
       unit: unit,
       category: category,
     );
-    state = [...state, newItem];
+    await _saveItems([...state, newItem]);
   }
 
-  void toggleComplete(String id) {
-    state = [
+  Future<void> toggleComplete(String id) async {
+    await _saveItems([
       for (final item in state)
         if (item.id == id)
           item.copyWith(isCompleted: !item.isCompleted)
         else
           item,
-    ];
+    ]);
   }
 
-  void deleteItem(String id) {
-    state = state.where((item) => item.id != id).toList();
+  Future<void> deleteItem(String id) async {
+    await _saveItems(state.where((item) => item.id != id).toList());
   }
-  
-  void deleteCompleted() {
-    state = state.where((item) => !item.isCompleted).toList();
+
+  Future<void> deleteCompleted() async {
+    await _saveItems(state.where((item) => !item.isCompleted).toList());
+  }
+
+  Future<void> _saveItems(List<ShoppingItemModel> items) async {
+    await _repo.saveItems(items);
+    state = items;
   }
 }
 
-final shoppingListProvider = NotifierProvider<ShoppingListNotifier, List<ShoppingItemModel>>(ShoppingListNotifier.new);
+final shoppingListProvider =
+    NotifierProvider<ShoppingListNotifier, List<ShoppingItemModel>>(
+      ShoppingListNotifier.new,
+    );

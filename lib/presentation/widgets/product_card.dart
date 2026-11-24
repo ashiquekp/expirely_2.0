@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import '../../data/models/product_model.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
   final VoidCallback? onDelete;
-  final VoidCallback? onEdit; // Not implementing Edit fully yet, but good to have
+  final VoidCallback?
+  onEdit; // Not implementing Edit fully yet, but good to have
   final VoidCallback? onRestock;
 
   const ProductCard({
@@ -25,7 +26,7 @@ class ProductCard extends StatelessWidget {
 
     if (days < 0) {
       statusColor = Colors.red;
-     // statusText = 'Expired';
+      // statusText = 'Expired';
     } else if (days <= 7) {
       statusColor = Colors.orange;
       //statusText = '$days days left';
@@ -90,7 +91,11 @@ class ProductCard extends StatelessWidget {
               child: Text(
                 days < 0
                     ? 'EXPIRED'
-                    : (days == 1 ? '$days DAY LEFT' :  days > 1 && days <= 7 ? '$days DAYS LEFT' : 'FRESH'),
+                    : (days == 1
+                          ? '$days DAY LEFT'
+                          : days > 1 && days <= 7
+                          ? '$days DAYS LEFT'
+                          : 'FRESH'),
                 style: TextStyle(
                   color: statusColor,
                   fontWeight: FontWeight.bold,

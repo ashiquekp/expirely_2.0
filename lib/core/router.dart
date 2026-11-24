@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import '../../presentation/screens/dashboard_screen.dart';
 import '../../presentation/screens/product_list_screen.dart';
 import '../../presentation/screens/add_product_screen.dart';
@@ -75,10 +74,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
 final goRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const SplashScreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
     ShellRoute(
       builder: (context, state, child) {
         return ScaffoldWithNavBar(child: child);
